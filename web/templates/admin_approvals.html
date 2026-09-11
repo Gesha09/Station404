@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Approvals</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #1a1a2e;
+            min-height: 100vh;
+            padding: 2rem;
+            color: white;
+        }
+        .container { max-width: 1000px; margin: 0 auto; }
+        h1 { margin-bottom: 1rem; }
+        h2 { margin: 2rem 0 1rem; color: #ffaa00; }
+        .request {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #ffaa00;
+        }
+        .request.approved { border-color: #44ff44; }
+        .request.rejected { border-color: #ff4444; }
+        .request-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .code {
+            font-family: monospace;
+            background: rgba(0,0,0,0.3);
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-size: 1.1rem;
+        }
+        .status {
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+        }
+        .status.pending { background: #ffaa00; color: #000; }
+        .status.approved { background: #44ff44; color: #000; }
+        .status.rejected { background: #ff4444; }
+        .meta { opacity: 0.7; font-size: 0.9rem; }
+        .empty { opacity: 0.5; padding: 2rem; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Pending Approvals</h1>
+        
+        {% if pending %}
+            {% for req in pending %}
+            <div class="request">
+                <div class="request-header">
+                    <strong>{{ req.item_name }}</strong>
+                    <span class="status pending">PENDING</span>
+                </div>
+                <div>Player: <strong>{{ req.username }}</strong></div>
+                <div>Code: <span class="code">{{ req.approval_code }}</span></div>
+                <div class="meta">Use Discord: <code>/approve {{ req.approval_code }}</code></div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty">✅ No pending approvals</div>
+        {% endif %}
+        
+        <h2>Recent History</h2>
+        {% for req in all_requests %}
+        <div class="request {{ req.status }}">
+            <div class="request-header">
+                <strong>{{ req.item_name }}</strong>
+                <span class="status {{ req.status }}">{{ req.status.upper() }}</span>
+            </div>
+            <div>Player: {{ req.username }} | Code: <span class="code">{{ req.approval_code }}</span></div>
+            {% if req.rejection_reason %}
+            <div class="meta">Reason: {{ req.rejection_reason }}</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>

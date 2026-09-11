@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Shop Management</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #1a1a2e;
+            min-height: 100vh;
+            padding: 2rem;
+            color: white;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { margin-bottom: 2rem; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        th { background: rgba(255,255,255,0.1); }
+        .rarity-badge {
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+        .rarity-common { background: #888; }
+        .rarity-rare { background: #4488ff; }
+        .rarity-epic { background: #aa44ff; }
+        .rarity-legendary { background: #ffaa00; color: #000; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛒 Shop Management</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>ID</th>
+                    <th>Rarity</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Loot</th>
+                    <th>Approval</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td><strong>{{ item.name }}</strong><br><small>{{ item.description }}</small></td>
+                    <td><code>{{ item.item_id }}</code></td>
+                    <td><span class="rarity-badge rarity-{{ item.rarity }}">{{ item.rarity }}</span></td>
+                    <td>{{ item.price }} 💰</td>
+                    <td>
+                        {% if item.stock_limit %}
+                            {{ item.current_stock }}/{{ item.stock_limit }}
+                        {% else %}
+                            ∞
+                        {% endif %}
+                    </td>
+                    <td>{{ "✅" if item.can_drop_in_loot else "—" }}</td>
+                    <td>
+                        {% if item.requires_approval %}
+                            {{ "✅" if item.is_approved else "🔐" }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

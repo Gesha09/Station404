@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ player.username }} - Inventory</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: white;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { font-size: 2.5rem; margin-bottom: 2rem; }
+        .item-list { display: flex; flex-direction: column; gap: 1rem; }
+        .item {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid;
+        }
+        .item.common { border-color: #888; }
+        .item.rare { border-color: #4488ff; }
+        .item.epic { border-color: #aa44ff; }
+        .item.legendary { border-color: #ffaa00; }
+        .item-info { flex: 1; }
+        .item-name { font-size: 1.3rem; font-weight: bold; }
+        .item-desc { opacity: 0.8; margin-top: 0.3rem; }
+        .item-qty {
+            font-size: 2rem;
+            font-weight: bold;
+            padding: 0 1rem;
+        }
+        .empty {
+            text-align: center;
+            padding: 3rem;
+            opacity: 0.7;
+            font-size: 1.2rem;
+        }
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎒 {{ player.username }}'s Inventory</h1>
+        
+        {% if items %}
+        <div class="item-list">
+            {% for item in items %}
+            <div class="item {{ item.rarity }}">
+                <div class="item-info">
+                    <div class="item-name">{{ item.name }}</div>
+                    <div class="item-desc">{{ item.description }}</div>
+                </div>
+                <div class="item-qty">x{{ item.quantity }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty">
+            Your inventory is empty.<br>
+            Visit the <a href="/shop?user={{ player.discord_id }}" style="color: #ffdd44;">shop</a> to buy items!
+        </div>
+        {% endif %}
+        
+        <!-- Navigation Links -->
+        <div style="margin-top: 2rem; padding-top: 2rem; border-top: 2px solid rgba(255,255,255,0.2); text-align: center;">
+            <a href="/profile/{{ player.discord_id }}" class="nav-btn" style="
+                display: inline-block;
+                margin: 0 0.5rem;
+                padding: 0.8rem 1.5rem;
+                background: rgba(255,255,255,0.1);
+                border: 2px solid rgba(255,255,255,0.3);
+                border-radius: 8px;
+                color: white;
+                text-decoration: none;
+                font-weight: bold;
+                transition: all 0.2s;
+            ">👤 Back to Profile</a>
+            
+            <a href="/shop?user={{ player.discord_id }}" class="nav-btn" style="
+                display: inline-block;
+                margin: 0 0.5rem;
+                padding: 0.8rem 1.5rem;
+                background: rgba(255,221,68,0.2);
+                border: 2px solid #ffdd44;
+                border-radius: 8px;
+                color: #ffdd44;
+                text-decoration: none;
+                font-weight: bold;
+                transition: all 0.2s;
+            ">🛒 Visit Shop</a>
+        </div>
+    </div>
+</body>
+</html>

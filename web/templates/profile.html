@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ player.username }} - Profile</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: white;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        .card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        h1 { font-size: 2.5rem; margin-bottom: 1rem; }
+        h2 { font-size: 1.8rem; margin-bottom: 1rem; }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* Forces exactly 3 columns to match Player Info */
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        /* Responsive: 2 columns on tablets, 1 on mobile */
+        @media (max-width: 768px) {
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 480px) {
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+        .stat {
+            background: rgba(255,255,255,0.1);
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        /* Timer styles */
+        .timer-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        .timer-box {
+            background: rgba(0,0,0,0.3);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            border: 2px solid rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+        }
+        .timer-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .timer-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            color: #44ff44;
+            transition: color 0.3s ease;
+        }
+        .timer-value.warning { color: #ffaa00; }
+        .timer-value.danger { color: #ff4444; animation: pulse 1s infinite; }
+        .timer-value.idle { color: #888; font-size: 1.5rem; }
+        
+        .phase-badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+        .phase-badge.final {
+            background: #ff4444;
+            animation: pulse 1s infinite;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #888;
+        }
+        .status-dot.idle { background: #888; }
+        .status-dot.prep { background: #ffaa00; animation: pulse 1s infinite; }
+        .status-dot.active { background: #44ff44; animation: pulse 1s infinite; }
+        .status-dot.dead { background: #ff4444; }
+        .status-dot.jailed { background: #ffaa00; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        @media (max-width: 600px) {
+            .timer-grid { grid-template-columns: 1fr; }
+            .timer-value { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 1. Player Info Card -->
+        <div class="card">
+            <h1>👤 {{ player.username }}</h1>
+            <p>Member since {{ player.registered_at_formatted }}</p>
+            
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value">{{ player.pocket_credits }}</div>
+                    <div class="stat-label">💰 Pocket Credits</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">{{ player.vault_bonds }}</div>
+                    <div class="stat-label">🏦 Vault Bonds</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">{{ player.is_on_duty_text }}</div>
+                    <div class="stat-label">Status</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 2. Player Status Timers (Dead/Jailed) -->
+        <div class="card" id="player-status-card" style="display: none;">
+            <div class="status-indicator">
+                <div class="status-dot" id="player-status-dot"></div>
+                <span id="player-status-text">Loading...</span>
+            </div>
+            
+            <div class="timer-grid">
+                <div class="timer-box" id="respawn-timer-box" style="display: none;">
+                    <div class="timer-label">💀 Respawn In</div>
+                    <div class="timer-value danger" id="respawn-timer">--:--</div>
+                </div>
+                <div class="timer-box" id="jail-timer-box" style="display: none;">
+                    <div class="timer-label">⚖️ Jail Release</div>
+                    <div class="timer-value warning" id="jail-timer">--:--</div>
+                </div>
+            </div>
+            
+            <p style="margin-top: 1rem; opacity: 0.8; text-align: center;" id="status-message"></p>
+        </div>
+        
+        <!-- 3. Live Round Timer Card -->
+        <div class="card">
+            <div class="status-indicator">
+                <div class="status-dot" id="status-dot"></div>
+                <span id="status-text">Loading...</span>
+            </div>
+            <div id="phase-badge-container"></div>
+            
+            <div class="timer-grid">
+                <div class="timer-box">
+                    <div class="timer-label">⏱️ Round Ends</div>
+                    <div class="timer-value idle" id="round-timer">--:--</div>
+                </div>
+                <div class="timer-box">
+                    <div class="timer-label">🔄 Next Shift</div>
+                    <div class="timer-value idle" id="rotation-timer">--:--</div>
+                </div>
+            </div>
+            
+            <div class="stats" style="margin-top: 1.5rem;">
+                <div class="stat">
+                    <div class="stat-value" id="participants-count">0</div>
+                    <div class="stat-label">👥 Players</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="stop-votes">0/0</div>
+                    <div class="stat-label">🗳️ Stop Votes</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 4. Shop & Inventory Card -->
+        <div class="card">
+            <h2>🛒 Shop & Inventory</h2>
+            <div style="margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                <!-- Shop Link -->
+                <a href="/shop?user={{ player.discord_id }}" style="
+                    display: inline-block;
+                    padding: 0.8rem 1.5rem;
+                    background: rgba(255,221,68,0.2);
+                    border: 2px solid #ffdd44;
+                    border-radius: 8px;
+                    color: #ffdd44;
+                    text-decoration: none;
+                    font-weight: bold;
+                    transition: all 0.2s;
+                ">🛒 Visit Shop</a>
+                
+                <!-- Inventory Link (FIXED) -->
+                <a href="/inventory/{{ player.discord_id }}" style="
+                    display: inline-block;
+                    padding: 0.8rem 1.5rem;
+                    background: rgba(68,255,68,0.2);
+                    border: 2px solid #44ff44;
+                    border-radius: 8px;
+                    color: #44ff44;
+                    text-decoration: none;
+                    font-weight: bold;
+                    transition: all 0.2s;
+                ">🎒 View Inventory</a>
+            </div>
+        </div>
+        
+        <!-- 5. Statistics Card -->
+        <div class="card">
+            <h2>📊 Statistics</h2>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">🎮 Rounds Played</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">🏆 Rounds Won</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">🥷 Times Imposter</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">💀 Times Eliminated</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">⚖️ Times Jailed</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">🥷 Successful Robberies</div>
+                </div>
+            </div>
+            <p style="margin-top: 1rem; opacity: 0.6; font-size: 0.9rem;">
+                Statistics will be tracked after you play more rounds!
+            </p>
+        </div>
+    </div>
+    
+    <script>
+    // ============ ROUND STATUS ============
+    let currentRoundEndTime = null;
+    let currentRotationEndTime = null;
+    let tickInterval = null;
+    
+    async function fetchRoundStatus() {
+        try {
+            const response = await fetch('/api/round-status');
+            const data = await response.json();
+            updateRoundUI(data);
+        } catch (e) {
+            console.error('Failed to fetch round status:', e);
+        }
+    }
+    
+    function updateRoundUI(data) {
+        const statusDot = document.getElementById('status-dot');
+        const statusText = document.getElementById('status-text');
+        const phaseContainer = document.getElementById('phase-badge-container');
+        const roundTimer = document.getElementById('round-timer');
+        const rotationTimer = document.getElementById('rotation-timer');
+        const participantsEl = document.getElementById('participants-count');
+        const votesEl = document.getElementById('stop-votes');
+        
+        if (tickInterval) {
+            clearInterval(tickInterval);
+            tickInterval = null;
+        }
+        
+        if (data.status === 'idle') {
+            statusDot.className = 'status-dot idle';
+            statusText.textContent = 'No round in progress';
+            phaseContainer.innerHTML = '';
+            roundTimer.textContent = '--:--';
+            roundTimer.className = 'timer-value idle';
+            rotationTimer.textContent = '--:--';
+            rotationTimer.className = 'timer-value idle';
+            participantsEl.textContent = '0';
+            votesEl.textContent = '0/0';
+            return;
+        }
+        
+        if (data.status === 'prep') {
+            statusDot.className = 'status-dot prep';
+            statusText.textContent = 'Preparation Phase';
+            phaseContainer.innerHTML = '';
+            
+            currentRoundEndTime = null;
+            currentRotationEndTime = null;
+            
+            if (data.prep_end_time) {
+                currentRotationEndTime = data.prep_end_time;
+                rotationTimer.parentElement.querySelector('.timer-label').textContent = '⏱️ Round Starts';
+                tickInterval = setInterval(tickRoundTimers, 1000);
+                tickRoundTimers();
+            } else {
+                rotationTimer.textContent = '--:--';
+                rotationTimer.className = 'timer-value idle';
+            }
+            
+            roundTimer.textContent = '--:--';
+            roundTimer.className = 'timer-value idle';
+            
+            participantsEl.textContent = data.participants || 0;
+            votesEl.textContent = '0/0';
+            return;
+        }
+        
+        if (data.status === 'active') {
+            statusDot.className = 'status-dot active';
+            statusText.textContent = `Round Active — Phase ${data.phase_number || '?'}`;
+            
+            rotationTimer.parentElement.querySelector('.timer-label').textContent = '🔄 Next Shift';
+            
+            if (data.final_phase) {
+                phaseContainer.innerHTML = '<span class="phase-badge final">🚨 FINAL PHASE</span>';
+            } else {
+                phaseContainer.innerHTML = `<span class="phase-badge">Phase ${data.phase_number || '?'}</span>`;
+            }
+            
+            currentRoundEndTime = data.round_end_time;
+            currentRotationEndTime = data.next_rotation_time;
+            
+            tickInterval = setInterval(tickRoundTimers, 1000);
+            tickRoundTimers();
+            
+            participantsEl.textContent = data.participants || 0;
+            const total = data.participants || 0;
+            const needed = Math.floor(total / 2) + 1;
+            votesEl.textContent = `${data.stop_votes || 0}/${needed}`;
+        }
+    }
+    
+    function tickRoundTimers() {
+        const now = Date.now() / 1000;
+        
+        const roundTimer = document.getElementById('round-timer');
+        if (currentRoundEndTime) {
+            const remaining = Math.max(0, Math.floor(currentRoundEndTime - now));
+            const mins = Math.floor(remaining / 60);
+            const secs = remaining % 60;
+            roundTimer.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+            
+            if (remaining <= 30) {
+                roundTimer.className = 'timer-value danger';
+            } else if (remaining <= 60) {
+                roundTimer.className = 'timer-value warning';
+            } else {
+                roundTimer.className = 'timer-value';
+            }
+            
+            if (remaining === 0) {
+                roundTimer.textContent = 'ENDED';
+                roundTimer.className = 'timer-value idle';
+            }
+        }
+        
+        const rotationTimer = document.getElementById('rotation-timer');
+        if (currentRotationEndTime) {
+            const remaining = Math.max(0, Math.floor(currentRotationEndTime - now));
+            const mins = Math.floor(remaining / 60);
+            const secs = remaining % 60;
+            rotationTimer.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+            
+            if (remaining <= 15) {
+                rotationTimer.className = 'timer-value danger';
+            } else if (remaining <= 30) {
+                rotationTimer.className = 'timer-value warning';
+            } else {
+                rotationTimer.className = 'timer-value';
+            }
+            
+            if (remaining === 0) {
+                rotationTimer.textContent = 'NOW';
+                rotationTimer.className = 'timer-value idle';
+            }
+        }
+    }
+    
+    // ============ PLAYER STATUS (Dead/Jailed) ============
+    let respawnEndTime = null;
+    let jailEndTime = null;
+    let playerStatusInterval = null;
+    
+    async function fetchPlayerStatus() {
+        try {
+            const response = await fetch('/api/player-status/{{ player.discord_id }}');
+            const data = await response.json();
+            updatePlayerStatusUI(data);
+        } catch (e) {
+            console.error('Failed to fetch player status:', e);
+        }
+    }
+    
+    function updatePlayerStatusUI(data) {
+        const card = document.getElementById('player-status-card');
+        const statusDot = document.getElementById('player-status-dot');
+        const statusText = document.getElementById('player-status-text');
+        const respawnBox = document.getElementById('respawn-timer-box');
+        const jailBox = document.getElementById('jail-timer-box');
+        const message = document.getElementById('status-message');
+        
+        if (playerStatusInterval) {
+            clearInterval(playerStatusInterval);
+            playerStatusInterval = null;
+        }
+        
+        if (!data.is_dead && !data.is_jailed) {
+            card.style.display = 'none';
+            return;
+        }
+        
+        card.style.display = 'block';
+        
+        if (data.is_dead) {
+            statusDot.className = 'status-dot dead';
+            statusText.textContent = '💀 You are dead';
+            respawnBox.style.display = 'block';
+            respawnEndTime = data.respawn_time;
+            message.textContent = 'You lost all your Pocket Credits. Wait for respawn...';
+        } else {
+            respawnBox.style.display = 'none';
+        }
+        
+        if (data.is_jailed) {
+            statusDot.className = 'status-dot jailed';
+            statusText.textContent = '⚖️ You are in jail';
+            jailBox.style.display = 'block';
+            jailEndTime = data.jail_release_time;
+            message.textContent = 'You cannot move, rob, or complete tasks while jailed.';
+        } else {
+            jailBox.style.display = 'none';
+        }
+        
+        playerStatusInterval = setInterval(tickPlayerTimers, 1000);
+        tickPlayerTimers();
+    }
+    
+    function tickPlayerTimers() {
+        const now = Date.now() / 1000;
+        
+        const respawnTimer = document.getElementById('respawn-timer');
+        if (respawnEndTime) {
+            const remaining = Math.max(0, Math.floor(respawnEndTime - now));
+            const mins = Math.floor(remaining / 60);
+            const secs = remaining % 60;
+            respawnTimer.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+            
+            if (remaining <= 30) {
+                respawnTimer.className = 'timer-value danger';
+            } else if (remaining <= 60) {
+                respawnTimer.className = 'timer-value warning';
+            } else {
+                respawnTimer.className = 'timer-value';
+            }
+            
+            if (remaining === 0) {
+                respawnTimer.textContent = 'RESPAWNED!';
+                respawnTimer.className = 'timer-value';
+                setTimeout(() => fetchPlayerStatus(), 2000);
+            }
+        }
+        
+        const jailTimer = document.getElementById('jail-timer');
+        if (jailEndTime) {
+            const remaining = Math.max(0, Math.floor(jailEndTime - now));
+            const mins = Math.floor(remaining / 60);
+            const secs = remaining % 60;
+            jailTimer.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+            
+            if (remaining <= 60) {
+                jailTimer.className = 'timer-value danger';
+            } else if (remaining <= 300) {
+                jailTimer.className = 'timer-value warning';
+            } else {
+                jailTimer.className = 'timer-value';
+            }
+            
+            if (remaining === 0) {
+                jailTimer.textContent = 'RELEASED!';
+                jailTimer.className = 'timer-value';
+                setTimeout(() => fetchPlayerStatus(), 2000);
+            }
+        }
+    }
+    
+    // ============ INITIALIZE ============
+    fetchRoundStatus();
+    fetchPlayerStatus();
+    setInterval(fetchRoundStatus, 5000);
+    setInterval(fetchPlayerStatus, 5000);
+    </script>
+</body>
+</html>

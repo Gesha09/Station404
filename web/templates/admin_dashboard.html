@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Station 404</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #0f0f1e;
+            color: white;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .header h1 { font-size: 1.5rem; }
+        .header-actions { display: flex; gap: 1rem; align-items: center; }
+        .header-actions a {
+            color: #ffaa00;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border: 1px solid #ffaa00;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+        .header-actions a:hover { background: rgba(255,170,0,0.1); }
+        
+        .pass-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid;
+        }
+        .pass-card h2 {
+            margin-bottom: 1rem;
+        }
+        .pass-card small {
+            display: block;
+            margin-top: 0.3rem;
+            opacity: 0.6;
+        }
+
+        .layout {
+            display: flex;
+            min-height: calc(100vh - 70px);
+        }
+        .sidebar {
+            width: 220px;
+            background: #1a1a2e;
+            padding: 1.5rem 0;
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+        .nav-item {
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            font-size: 0.95rem;
+        }
+        .nav-item:hover { background: rgba(255,255,255,0.05); }
+        .nav-item.active {
+            background: rgba(255,170,0,0.1);
+            border-left-color: #ffaa00;
+            color: #ffaa00;
+        }
+        .content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+        
+        .panel { display: none; }
+        .panel.active { display: block; }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        .stat-label {
+            font-size: 0.85rem;
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        .stat-value.green { color: #44ff44; }
+        .stat-value.yellow { color: #ffaa00; }
+        .stat-value.red { color: #ff4444; }
+        .stat-value.blue { color: #4488ff; }
+        
+        .card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .card h2 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: #ffaa00;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 0.8rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        th {
+            background: rgba(255,255,255,0.05);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.8;
+        }
+        tr:hover { background: rgba(255,255,255,0.02); }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .badge-common { background: #888; }
+        .badge-rare { background: #4488ff; }
+        .badge-epic { background: #aa44ff; }
+        .badge-legendary { background: #ffaa00; color: #000; }
+        .badge-idle { background: #888; }
+        .badge-prep { background: #ffaa00; color: #000; }
+        .badge-active { background: #44ff44; color: #000; }
+        .badge-ended { background: #ff4444; }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .btn-primary { background: #ffaa00; color: #000; }
+        .btn-primary:hover { background: #ffbb33; }
+        .btn-danger { background: #ff4444; color: white; }
+        .btn-danger:hover { background: #ff6666; }
+        .btn-secondary { background: rgba(255,255,255,0.1); color: white; }
+        .btn-secondary:hover { background: rgba(255,255,255,0.2); }
+        
+        input, select, textarea {
+            padding: 0.6rem;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            color: white;
+            font-size: 0.95rem;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #ffaa00;
+        }
+        
+        .search-box {
+            margin-bottom: 1rem;
+        }
+        .search-box input {
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .event-item {
+            padding: 0.8rem;
+            border-left: 3px solid #ffaa00;
+            background: rgba(255,255,255,0.03);
+            margin-bottom: 0.5rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        .event-time {
+            font-size: 0.8rem;
+            opacity: 0.6;
+            margin-bottom: 0.3rem;
+        }
+        .event-type {
+            display: inline-block;
+            padding: 0.1rem 0.5rem;
+            background: rgba(255,170,0,0.2);
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-right: 0.5rem;
+        }
+        
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: #1a1a2e;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal h2 { margin-bottom: 1.5rem; color: #ffaa00; }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.4rem;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎮 Station 404 Admin Dashboard</h1>
+        <div class="header-actions">
+            <a href="/" target="_blank">View Site</a>
+            <a href="/admin/logout">Logout</a>
+        </div>
+    </div>
+    
+    <div class="layout">
+            <div class="sidebar">
+            <div class="nav-item active" onclick="showPanel('overview')">📊 Overview</div>
+            <div class="nav-item" onclick="showPanel('players')">👥 Players</div>
+            <div class="nav-item" onclick="showPanel('shop')">🛒 Shop</div>
+            <div class="nav-item" onclick="showPanel('passes')">🎫 Pass Settings</div>
+            <div class="nav-item" onclick="showPanel('approvals')">🔐 Approvals</div>
+            <div class="nav-item" onclick="showPanel('events')">📜 Event Log</div>
+        </div>
+        
+        <div class="content">
+            <!-- OVERVIEW PANEL -->
+            <div class="panel active" id="panel-overview">
+                <h1 style="margin-bottom: 1.5rem;">📊 Overview</h1>
+                <div class="stats-grid" id="overview-stats">
+                    <div class="stat-card"><div class="stat-label">Status</div><div class="stat-value" id="stat-status">Loading...</div></div>
+                    <div class="stat-card"><div class="stat-label">Total Players</div><div class="stat-value blue" id="stat-players">-</div></div>
+                    <div class="stat-card"><div class="stat-label">On Duty</div><div class="stat-value green" id="stat-onduty">-</div></div>
+                    <div class="stat-card"><div class="stat-label">Phase</div><div class="stat-value yellow" id="stat-phase">-</div></div>
+                </div>
+                
+                <div class="card">
+                    <h2>🕐 Recent Events</h2>
+                    <div id="recent-events">Loading...</div>
+                </div>
+            </div>
+            
+            <!-- PLAYERS PANEL -->
+            <div class="panel" id="panel-players">
+                <h1 style="margin-bottom: 1.5rem;">👥 Players</h1>
+                <div class="search-box">
+                    <input type="text" id="player-search" placeholder="Search by username or Discord ID..." oninput="loadPlayers()">
+                </div>
+                <div class="card">
+                    <table id="players-table">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Discord ID</th>
+                                <th>Pocket</th>
+                                <th>Vault</th>
+                                <th>Status</th>
+                                <th>Room</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="players-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- SHOP PANEL -->
+            <div class="panel" id="panel-shop">
+                <h1 style="margin-bottom: 1.5rem;">🛒 Shop Management</h1>
+                <button class="btn btn-primary" onclick="openItemModal()">+ Add New Item</button>
+                <div class="card" style="margin-top: 1rem;">
+                    <table id="items-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>ID</th>
+                                <th>Rarity</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                                <th>Approval</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="items-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- PASS SETTINGS PANEL -->
+            <div class="panel" id="panel-passes">
+                <h1 style="margin-bottom: 1.5rem;">🎫 Pass Settings</h1>
+                <p style="opacity: 0.7; margin-bottom: 2rem;">
+                    Configure limits and requirements for special passes. Changes take effect immediately.
+                </p>
+                
+                <div id="pass-config-container">Loading...</div>
+                
+                <div style="margin-top: 2rem; text-align: right;">
+                    <button class="btn btn-primary" onclick="savePassConfig()" style="padding: 0.8rem 2rem; font-size: 1rem;">
+                        💾 Save All Changes
+                    </button>
+                </div>
+            </div>
+            
+            <!-- APPROVALS PANEL -->
+            <div class="panel" id="panel-approvals">
+                <h1 style="margin-bottom: 1.5rem;">🔐 Approvals</h1>
+                <div class="card">
+                    <h2>Pending</h2>
+                    <div id="pending-approvals">Loading...</div>
+                </div>
+                <div class="card">
+                    <h2>History</h2>
+                    <div id="approval-history">Loading...</div>
+                </div>
+            </div>
+            
+            <!-- EVENTS PANEL -->
+            <div class="panel" id="panel-events">
+                <h1 style="margin-bottom: 1.5rem;">📜 Event Log</h1>
+                <div class="search-box">
+                    <select id="event-filter" onchange="loadEvents()">
+                        <option value="">All Events</option>
+                        <option value="player_registered">Player Registered</option>
+                        <option value="round_started">Round Started</option>
+                        <option value="round_ended">Round Ended</option>
+                        <option value="imposter_assigned">Imposter Assigned</option>
+                        <option value="player_killed">Player Killed</option>
+                        <option value="player_robbed">Player Robbed</option>
+                        <option value="player_jailed">Player Jailed</option>
+                        <option value="item_purchased">Item Purchased</option>
+                        <option value="loot_spawned">Loot Spawned</option>
+                        <option value="admin_action">Admin Action</option>
+                    </select>
+                </div>
+                <div class="card">
+                    <div id="events-list">Loading...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Player Edit Modal -->
+    <div class="modal-overlay" id="player-modal">
+        <div class="modal">
+            <h2>Edit Player</h2>
+            <div id="player-modal-content"></div>
+        </div>
+    </div>
+    
+    <!-- Item Modal -->
+    <div class="modal-overlay" id="item-modal">
+        <div class="modal">
+            <h2 id="item-modal-title">Add New Item</h2>
+            <form id="item-form" onsubmit="saveItem(event)">
+                <input type="hidden" id="item-editing-id">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Item ID (unique)</label>
+                        <input type="text" id="item-id" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" id="item-name" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="item-description" rows="2" required></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Price</label>
+                        <input type="number" id="item-price" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Rarity</label>
+                        <select id="item-rarity">
+                            <option value="common">Common</option>
+                            <option value="rare">Rare</option>
+                            <option value="epic">Epic</option>
+                            <option value="legendary">Legendary</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Stock Limit (blank = unlimited)</label>
+                        <input type="number" id="item-stock" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Loot Weight (blank = not in loot)</label>
+                        <input type="number" id="item-loot-weight" min="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label><input type="checkbox" id="item-requires-approval"> Requires admin approval</label>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeItemModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+    // ============ NAVIGATION ============
+    function showPanel(name) {
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById('panel-' + name).classList.add('active');
+        event.target.classList.add('active');
+        
+        if (name === 'overview') loadOverview();
+        if (name === 'players') loadPlayers();
+        if (name === 'shop') loadItems();
+        if (name === 'approvals') loadApprovals();
+        if (name === 'events') loadEvents();
+    }
+    
+    // ============ OVERVIEW ============
+    async function loadOverview() {
+        try {
+            const res = await fetch('/api/admin/overview');
+            const data = await res.json();
+            
+            const status = data.game_state?.status || 'idle';
+            document.getElementById('stat-status').textContent = status.toUpperCase();
+            document.getElementById('stat-status').className = 'stat-value ' + 
+                (status === 'active' ? 'green' : status === 'prep' ? 'yellow' : '');
+            document.getElementById('stat-players').textContent = data.total_players;
+            document.getElementById('stat-onduty').textContent = data.on_duty;
+            document.getElementById('stat-phase').textContent = data.game_state?.phase_number || '-';
+            
+            const eventsHtml = data.recent_events.map(e => {
+                const time = new Date(e.timestamp).toLocaleString();
+                const details = JSON.parse(e.details || '{}');
+                return `<div class="event-item">
+                    <div class="event-time">${time}</div>
+                    <span class="event-type">${e.event_type}</span>
+                    <strong>${e.actor_name || 'System'}</strong>
+                    ${e.target_name ? '→ <strong>' + e.target_name + '</strong>' : ''}
+                    ${Object.keys(details).length ? '<br><small style="opacity:0.7">' + JSON.stringify(details) + '</small>' : ''}
+                </div>`;
+            }).join('') || '<p style="opacity:0.5">No events yet</p>';
+            
+            document.getElementById('recent-events').innerHTML = eventsHtml;
+        } catch (e) {
+            console.error(e);
+        }
+    }
+    
+    // ============ PLAYERS ============
+    async function loadPlayers() {
+        const search = document.getElementById('player-search').value;
+        const res = await fetch('/api/admin/players?search=' + encodeURIComponent(search));
+        const data = await res.json();
+        
+        const tbody = document.getElementById('players-tbody');
+        tbody.innerHTML = data.players.map(p => {
+            const status = !p.is_alive ? '💀 Dead' : 
+                          (p.jail_release_at && new Date(p.jail_release_at) > new Date()) ? '⚖️ Jailed' :
+                          p.is_on_duty ? '🟢 On Duty' : '🔴 Off Duty';
+            return `<tr>
+                <td><strong>${p.username}</strong></td>
+                <td><code>${p.discord_id}</code></td>
+                <td>${p.pocket_credits}</td>
+                <td>${p.vault_bonds}</td>
+                <td>${status}</td>
+                <td>${p.current_room || '-'}</td>
+                <td><button class="btn btn-secondary" onclick="editPlayer('${p.id}')">Edit</button></td>
+            </tr>`;
+        }).join('');
+    }
+    
+    async function editPlayer(playerId) {
+        const res = await fetch('/api/admin/players');
+        const data = await res.json();
+        const player = data.players.find(p => p.id === playerId);
+        if (!player) return;
+        
+        document.getElementById('player-modal-content').innerHTML = `
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" value="${player.username}" disabled>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Pocket Credits</label>
+                    <input type="number" id="edit-pocket" value="${player.pocket_credits}">
+                </div>
+                <div class="form-group">
+                    <label>Vault Bonds</label>
+                    <input type="number" id="edit-bonds" value="${player.vault_bonds}">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Room</label>
+                <select id="edit-room">
+                    ${['cafeteria','medbay','electrical','reactor','security','admin','navigation','weapons','shields','comms']
+                        .map(r => `<option value="${r}" ${player.current_room === r ? 'selected' : ''}>${r}</option>`).join('')}
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closePlayerModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="playerAction('${playerId}', 'kill')">Kill</button>
+                <button class="btn btn-danger" onclick="playerAction('${playerId}', 'respawn')">Respawn</button>
+                <button class="btn btn-danger" onclick="playerAction('${playerId}', 'release')">Release Jail</button>
+                <button class="btn btn-primary" onclick="savePlayer('${playerId}')">Save Changes</button>
+            </div>
+        `;
+        document.getElementById('player-modal').classList.add('active');
+    }
+    
+    async function savePlayer(playerId) {
+        const pocket = parseInt(document.getElementById('edit-pocket').value);
+        const bonds = parseInt(document.getElementById('edit-bonds').value);
+        const room = document.getElementById('edit-room').value;
+        
+        await fetch('/api/admin/players/update', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({player_id: playerId, pocket_credits: pocket, vault_bonds: bonds, room: room})
+        });
+        
+        closePlayerModal();
+        loadPlayers();
+    }
+    
+    async function playerAction(playerId, action) {
+        if (!confirm(`Are you sure you want to ${action} this player?`)) return;
+        await fetch('/api/admin/players/update', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({player_id: playerId, action: action})
+        });
+        closePlayerModal();
+        loadPlayers();
+    }
+    
+    function closePlayerModal() {
+        document.getElementById('player-modal').classList.remove('active');
+    }
+    
+        // ============ SHOP ============
+    let itemsCache = [];  // Cache items for editing
+    
+    async function loadItems() {
+        const res = await fetch('/api/admin/items');
+        const data = await res.json();
+        itemsCache = data.items;  // Cache for lookups
+        
+        const tbody = document.getElementById('items-tbody');
+        tbody.innerHTML = data.items.map(item => {
+            const stock = item.stock_limit ? `${item.current_stock}/${item.stock_limit}` : '∞';
+            const approval = item.requires_approval ? (item.is_approved ? '✅' : '🔐') : '—';
+            return `<tr>
+                <td><strong>${item.name}</strong><br><small style="opacity:0.7">${item.description}</small></td>
+                <td><code>${item.item_id}</code></td>
+                <td><span class="badge badge-${item.rarity}">${item.rarity}</span></td>
+                <td>${item.price} 💰</td>
+                <td>${stock}</td>
+                <td>${approval}</td>
+                <td>
+                    <button class="btn btn-secondary" onclick="editItemById('${item.item_id}')">Edit</button>
+                    <button class="btn btn-danger" onclick="deleteItem('${item.item_id}', '${item.name.replace(/'/g, "\\'")}')">Delete</button>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+    
+    // Look up item from cache by ID
+    function editItemById(itemId) {
+        const item = itemsCache.find(i => i.item_id === itemId);
+        if (!item) {
+            alert('Item not found in cache');
+            return;
+        }
+        openItemModal(item);
+    }
+    
+    function openItemModal(item = null) {
+        document.getElementById('item-modal-title').textContent = item ? 'Edit Item' : 'Add New Item';
+        document.getElementById('item-editing-id').value = item ? item.item_id : '';
+        document.getElementById('item-id').value = item ? item.item_id : '';
+        document.getElementById('item-id').disabled = !!item;
+        document.getElementById('item-name').value = item ? item.name : '';
+        document.getElementById('item-description').value = item ? item.description : '';
+        document.getElementById('item-price').value = item ? item.price : '';
+        document.getElementById('item-rarity').value = item ? item.rarity : 'common';
+        document.getElementById('item-stock').value = item && item.stock_limit ? item.stock_limit : '';
+        document.getElementById('item-loot-weight').value = item && item.can_drop_in_loot ? item.loot_weight : '';
+        document.getElementById('item-requires-approval').checked = item ? !!item.requires_approval : false;
+        document.getElementById('item-modal').classList.add('active');
+    }
+    
+    function editItem(item) { openItemModal(item); }
+    
+    function closeItemModal() {
+        document.getElementById('item-modal').classList.remove('active');
+    }
+    
+    async function saveItem(e) {
+        e.preventDefault();
+        const editingId = document.getElementById('item-editing-id').value;
+        
+        // Parse values with proper type conversion
+        const stockLimitRaw = document.getElementById('item-stock').value.trim();
+        const lootWeightRaw = document.getElementById('item-loot-weight').value.trim();
+        
+        const data = {
+            item_id: document.getElementById('item-id').value.trim(),
+            name: document.getElementById('item-name').value.trim(),
+            description: document.getElementById('item-description').value.trim(),
+            price: parseInt(document.getElementById('item-price').value) || 0,
+            rarity: document.getElementById('item-rarity').value,
+            stock_limit: stockLimitRaw === '' ? null : parseInt(stockLimitRaw),
+            loot_weight: lootWeightRaw === '' ? 0 : parseInt(lootWeightRaw),
+            can_drop_in_loot: lootWeightRaw !== '' && parseInt(lootWeightRaw) > 0,
+            requires_approval: document.getElementById('item-requires-approval').checked
+        };
+        
+        // Validation
+        if (!data.item_id || !data.name || !data.description || data.price < 0) {
+            alert('❌ Please fill in all required fields with valid values.');
+            return;
+        }
+        
+        const url = editingId ? '/api/admin/items/update' : '/api/admin/items/create';
+        
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            
+            if (result.success) {
+                closeItemModal();
+                loadItems();
+                alert('✅ Item ' + (editingId ? 'updated' : 'created') + ' successfully!');
+            } else {
+                alert('❌ Error: ' + (result.message || 'Unknown error'));
+            }
+        } catch (e) {
+            alert('❌ Network error: ' + e.message);
+        }
+    }
+    
+    async function deleteItem(itemId, name) {
+        if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+        await fetch('/api/admin/items/delete', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({item_id: itemId})
+        });
+        loadItems();
+    }
+    
+    // ============ APPROVALS ============
+    async function loadApprovals() {
+        const res = await fetch('/api/admin/approvals');
+        const data = await res.json();
+        
+        document.getElementById('pending-approvals').innerHTML = data.pending.length ? 
+            data.pending.map(r => `
+                <div class="event-item">
+                    <strong>${r.item_name}</strong> — ${r.username}
+                    <br><small>Code: <code>${r.approval_code}</code></small>
+                    <br><button class="btn btn-primary" onclick="approveCode('${r.approval_code}')">Approve</button>
+                </div>
+            `).join('') : '<p style="opacity:0.5">No pending approvals</p>';
+        
+        document.getElementById('approval-history').innerHTML = data.all.length ?
+            data.all.slice(0, 20).map(r => `
+                <div class="event-item">
+                    <strong>${r.item_name}</strong> — ${r.username}
+                    <span class="badge badge-${r.status === 'approved' ? 'active' : r.status === 'rejected' ? 'ended' : 'prep'}">${r.status}</span>
+                </div>
+            `).join('') : '<p style="opacity:0.5">No history</p>';
+    }
+    
+    // ============ EVENTS ============
+    async function loadEvents() {
+        const filter = document.getElementById('event-filter').value;
+        const url = '/api/admin/events' + (filter ? `?type=${filter}` : '');
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        document.getElementById('events-list').innerHTML = data.events.length ?
+            data.events.map(e => {
+                const time = new Date(e.timestamp).toLocaleString();
+                const details = JSON.parse(e.details || '{}');
+                return `<div class="event-item">
+                    <div class="event-time">${time}</div>
+                    <span class="event-type">${e.event_type}</span>
+                    <strong>${e.actor_name || 'System'}</strong>
+                    ${e.target_name ? '→ <strong>' + e.target_name + '</strong>' : ''}
+                    ${Object.keys(details).length ? '<br><small style="opacity:0.7">' + JSON.stringify(details) + '</small>' : ''}
+                </div>`;
+            }).join('') : '<p style="opacity:0.5">No events</p>';
+    }
+
+        // ============ APPROVALS ============
+    async function loadApprovals() {
+        const res = await fetch('/api/admin/approvals');
+        const data = await res.json();
+        
+        document.getElementById('pending-approvals').innerHTML = data.pending.length ? 
+            data.pending.map(r => `
+                <div class="event-item">
+                    <strong>${r.item_name}</strong> — ${r.username}
+                    <br><small>Code: <code>${r.approval_code}</code></small>
+                    <br><small>Requested: ${new Date(r.requested_at).toLocaleString()}</small>
+                    <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
+                        <button class="btn btn-primary" onclick="approveCode('${r.approval_code}')">✅ Approve</button>
+                        <button class="btn btn-danger" onclick="rejectCode('${r.approval_code}')">❌ Reject</button>
+                    </div>
+                </div>
+            `).join('') : '<p style="opacity:0.5">No pending approvals</p>';
+        
+        document.getElementById('approval-history').innerHTML = data.all.length ?
+            data.all.slice(0, 20).map(r => `
+                <div class="event-item">
+                    <strong>${r.item_name}</strong> — ${r.username}
+                    <span class="badge badge-${r.status === 'approved' ? 'active' : r.status === 'rejected' ? 'ended' : 'prep'}">${r.status}</span>
+                    ${r.rejection_reason ? '<br><small style="opacity:0.7">Reason: ' + r.rejection_reason + '</small>' : ''}
+                </div>
+            `).join('') : '<p style="opacity:0.5">No history</p>';
+    }
+    
+    async function approveCode(code) {
+        if (!confirm('Approve this request? The player will be notified via DM.')) return;
+        
+        try {
+            const res = await fetch('/api/admin/approvals/approve', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({code: code})
+            });
+            const result = await res.json();
+            
+            if (result.success) {
+                alert('✅ Approved! Player has been notified.');
+                loadApprovals();
+            } else {
+                alert('❌ Error: ' + result.message);
+            }
+        } catch (e) {
+            alert('❌ Network error: ' + e.message);
+        }
+    }
+    
+    async function rejectCode(code) {
+        const reason = prompt('Reason for rejection (optional):');
+        if (reason === null) return; // User clicked cancel
+        
+        if (!confirm('Reject this request? The player will be notified via DM.')) return;
+        
+        try {
+            const res = await fetch('/api/admin/approvals/reject', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({code: code, reason: reason})
+            });
+            const result = await res.json();
+            
+            if (result.success) {
+                alert('✅ Rejected! Player has been notified.');
+                loadApprovals();
+            } else {
+                alert('❌ Error: ' + result.message);
+            }
+        } catch (e) {
+            alert('❌ Network error: ' + e.message);
+        }
+    }
+
+        // ============ PASS SETTINGS ============
+    async function loadPassConfig() {
+        try {
+            const res = await fetch('/api/admin/pass-config');
+            const data = await res.json();
+            
+            const container = document.getElementById('pass-config-container');
+            
+            const passes = [
+                {id: 'tot_pass', name: '🎟️ TOT Pass', color: '#ffaa00'},
+                {id: 'daily_pass', name: '📅 Daily Pass', color: '#4488ff'},
+                {id: 'all_pass', name: '⭐ All-Access Pass', color: '#aa44ff'}
+            ];
+            
+            let html = '';
+            
+            passes.forEach(pass => {
+                const passInfo = data.passes[pass.id] || {};
+                const config = data.config;
+                
+                html += `
+                <div class="card" style="border-left: 4px solid ${pass.color};">
+                    <h2 style="color: ${pass.color};">${pass.name}</h2>
+                    <p style="opacity: 0.7; margin-bottom: 1rem;">
+                        Base Price: <strong>${passInfo.price || 0} 💰</strong>
+                        ${passInfo.is_available ? '<span class="badge badge-active">Available</span>' : '<span class="badge badge-ended">Unavailable</span>'}
+                    </p>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Max Accounts (0 = unlimited)</label>
+                            <input type="number" 
+                                   id="config-${pass.id}-max-accounts" 
+                                   value="${config[pass.id + '_max_accounts'] || 0}"
+                                   min="0"
+                                   style="width: 100%;">
+                            <small style="opacity: 0.6;">How many accounts can use this pass simultaneously</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Minimum Credits Required</label>
+                            <input type="number" 
+                                   id="config-${pass.id}-min-credits" 
+                                   value="${config[pass.id + '_min_credits'] || 0}"
+                                   min="0"
+                                   style="width: 100%;">
+                            <small style="opacity: 0.6;">Player must have at least this many credits to buy</small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" 
+                                   id="config-${pass.id}-available" 
+                                   ${passInfo.is_available ? 'checked' : ''}>
+                            Available in shop
+                        </label>
+                    </div>
+                </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        } catch (e) {
+            console.error('Failed to load pass config:', e);
+            document.getElementById('pass-config-container').innerHTML = 
+                '<p style="color: #ff4444;">Failed to load configuration</p>';
+        }
+    }
+    
+    async function savePassConfig() {
+        const passes = ['tot_pass', 'daily_pass', 'all_pass'];
+        const data = {};
+        
+        passes.forEach(pass => {
+            data[pass + '_max_accounts'] = parseInt(
+                document.getElementById(`config-${pass}-max-accounts`).value
+            ) || 0;
+            data[pass + '_min_credits'] = parseInt(
+                document.getElementById(`config-${pass}-min-credits`).value
+            ) || 0;
+            data[pass + '_available'] = document.getElementById(
+                `config-${pass}-available`
+            ).checked;
+        });
+        
+        try {
+            const res = await fetch('/api/admin/pass-config/update', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            
+            if (result.success) {
+                alert('✅ Pass configuration saved successfully!');
+                loadPassConfig();
+            } else {
+                alert('❌ Error: ' + result.message);
+            }
+        } catch (e) {
+            alert('❌ Network error: ' + e.message);
+        }
+    }
+
+    function showPanel(name) {
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById('panel-' + name).classList.add('active');
+        event.target.classList.add('active');
+        
+        if (name === 'overview') loadOverview();
+        if (name === 'players') loadPlayers();
+        if (name === 'shop') loadItems();
+        if (name === 'passes') loadPassConfig();  // NEW
+        if (name === 'approvals') loadApprovals();
+        if (name === 'events') loadEvents();
+    }
+    
+    // ============ INIT ============
+    loadOverview();
+    setInterval(loadOverview, 10000);
+    </script>
+</body>
+</html>

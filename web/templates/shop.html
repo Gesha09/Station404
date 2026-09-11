@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Station 404 - Shop</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: white;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { 
+            font-size: 2.5rem; 
+            margin-bottom: 0.5rem; 
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .subtitle {
+            text-align: center;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+        .filters {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            padding: 0.6rem 1.2rem;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+        .filter-btn:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+        .filter-btn.active {
+            background: rgba(255,221,68,0.3);
+            border-color: #ffdd44;
+        }
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .item-card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .item-card:hover { 
+            transform: translateY(-6px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .item-card.common { border-color: #888; }
+        .item-card.rare { border-color: #4488ff; box-shadow: 0 0 15px rgba(68,136,255,0.2); }
+        .item-card.epic { border-color: #aa44ff; box-shadow: 0 0 15px rgba(170,68,255,0.3); }
+        .item-card.legendary { 
+            border-color: #ffaa00; 
+            box-shadow: 0 0 25px rgba(255,170,0,0.4);
+            animation: legendaryGlow 2s ease-in-out infinite;
+        }
+        @keyframes legendaryGlow {
+            0%, 100% { box-shadow: 0 0 25px rgba(255,170,0,0.4); }
+            50% { box-shadow: 0 0 35px rgba(255,170,0,0.6); }
+        }
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.5rem;
+        }
+        .item-name { 
+            font-size: 1.4rem; 
+            font-weight: bold;
+            flex: 1;
+        }
+        .item-rarity {
+            display: inline-block;
+            padding: 0.25rem 0.7rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+        .rarity-common { background: #888; }
+        .rarity-rare { background: #4488ff; }
+        .rarity-epic { background: #aa44ff; }
+        .rarity-legendary { background: #ffaa00; color: #000; }
+        .approval-badge {
+            display: inline-block;
+            padding: 0.25rem 0.6rem;
+            background: #ff4444;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+            font-weight: bold;
+        }
+        .item-desc { 
+            opacity: 0.95; 
+            margin: 1rem 0; 
+            font-size: 0.95rem;
+            line-height: 1.5;
+            min-height: 3rem;
+        }
+        .item-price { 
+            font-size: 1.8rem; 
+            font-weight: bold; 
+            color: #ffdd44;
+            margin: 1rem 0;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        .item-stock { 
+            font-size: 0.9rem; 
+            opacity: 0.8; 
+            margin-bottom: 1rem;
+        }
+        .item-type {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+            text-transform: capitalize;
+        }
+        .buy-section {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+        .buy-controls {
+            display: flex;
+            gap: 0.8rem;
+            align-items: center;
+            margin-bottom: 0.8rem;
+        }
+        .buy-controls label {
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+        .buy-controls input[type="number"] {
+            width: 80px;
+            padding: 0.5rem;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.3);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+        .buy-controls input[type="number"]:focus {
+            outline: none;
+            border-color: #ffdd44;
+        }
+        .buy-btn {
+            flex: 1;
+            padding: 0.7rem 1rem;
+            background: linear-gradient(135deg, #ffdd44 0%, #ffcc00 100%);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        .buy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255,221,68,0.4);
+        }
+        .buy-btn:active {
+            transform: translateY(0);
+        }
+        .buy-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .total-cost {
+            font-size: 1.1rem;
+            text-align: center;
+            margin-top: 0.5rem;
+            color: #ffdd44;
+            font-weight: 600;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            opacity: 0.7;
+        }
+        .empty-state h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        .nav-links {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 2px solid rgba(255,255,255,0.2);
+        }
+        .nav-links a {
+            display: inline-block;
+            margin: 0 1rem;
+            padding: 0.8rem 1.5rem;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .nav-links a:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+        @media (max-width: 768px) {
+            .items-grid { grid-template-columns: 1fr; }
+            h1 { font-size: 2rem; }
+            .buy-controls { flex-direction: column; }
+            .buy-controls input[type="number"] { width: 100%; }
+        }
+    </style>
+</head>
+<body data-player-id="{% if player %}{{ player.discord_id }}{% endif %}">
+    <div class="container">
+        <h1>🛒 Station 404 Shop</h1>
+        <p class="subtitle">Spend your Pocket Credits on powerful items!</p>
+        
+        {# FALLBACK: If no player is detected, show an input to enter Discord ID #}
+        {% if not player %}
+        <div style="background: rgba(255,68,68,0.2); border: 2px solid #ff4444; border-radius: 12px; padding: 1.5rem; text-align: center; margin-bottom: 2rem;">
+            <h3 style="margin-bottom: 1rem;">⚠️ Player Not Detected</h3>
+            <p style="margin-bottom: 1rem; opacity: 0.9;">Enter your Discord ID to enable purchasing and view your profile.</p>
+            <div style="display: flex; justify-content: center; gap: 0.5rem; max-width: 400px; margin: 0 auto;">
+                <input type="text" id="manual-discord-id" placeholder="e.g., 123456789012345678" 
+                       style="flex: 1; padding: 0.8rem; border-radius: 8px; border: none; background: rgba(0,0,0,0.3); color: white; font-size: 1rem;">
+                <button onclick="applyDiscordId()" 
+                        style="padding: 0.8rem 1.5rem; background: #44ff44; color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                    Apply
+                </button>
+            </div>
+            <p style="margin-top: 1rem; font-size: 0.85rem; opacity: 0.7;">
+                💡 Tip: You can also just click "Visit Shop" directly from your bot profile page!
+            </p>
+        </div>
+        {% endif %}
+        
+        <div class="filters">
+            <button class="filter-btn active" onclick="filterItems('all')">All Items</button>
+            <button class="filter-btn" onclick="filterItems('common')">⚪ Common</button>
+            <button class="filter-btn" onclick="filterItems('rare')">🔵 Rare</button>
+            <button class="filter-btn" onclick="filterItems('epic')">🟣 Epic</button>
+            <button class="filter-btn" onclick="filterItems('legendary')">🟡 Legendary</button>
+        </div>
+        
+        <div class="items-grid" id="itemsGrid">
+            {% for item in items %}
+            <div class="item-card {{ item.rarity }}" data-rarity="{{ item.rarity }}">
+                <div class="item-header">
+                    <div class="item-name">{{ item.name }}</div>
+                    <span class="item-rarity rarity-{{ item.rarity }}">{{ item.rarity }}</span>
+                </div>
+                
+                {% if item.requires_approval and not item.is_approved %}
+                <span class="approval-badge">🔐 Requires Approval</span>
+                {% endif %}
+                
+                <span class="item-type">{{ item.item_type }}</span>
+                
+                <div class="item-desc">{{ item.description }}</div>
+                
+                <div class="item-price">{{ item.price }} 💰</div>
+                
+                {% if item.stock_limit %}
+                <div class="item-stock">
+                    {% if item.current_stock > 0 %}
+                         {{ item.current_stock }}/{{ item.stock_limit }} in stock
+                    {% else %}
+                        ❌ Out of stock
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="item-stock"> Unlimited stock</div>
+                {% endif %}
+                
+                                <div class="buy-section">
+                    {% if item.item_id in ['tot_pass', 'daily_pass', 'all_pass'] %}
+                        <!-- PASS: Usage-based pricing -->
+                        <div class="buy-controls">
+                            <label for="qty-{{ item.item_id }}">Uses:</label>
+                            <input type="number" 
+                                   id="qty-{{ item.item_id }}" 
+                                   value="1" 
+                                   min="1" 
+                                   max="99"
+                                   onchange="updateTotal('{{ item.item_id }}', {{ item.price }})">
+                            <button class="buy-btn" 
+                                    onclick="buyItem('{{ item.item_id }}', '{{ item.name }}', {{ item.price }}, true)"
+                                    {% if item.current_stock == 0 and item.stock_limit %}disabled{% endif %}>
+                                Buy Pass
+                            </button>
+                        </div>
+                        <div class="total-cost" id="total-{{ item.item_id }}">
+                            Total: {{ item.price }} 💰 (1 use)
+                        </div>
+                        <div style="font-size: 0.8rem; opacity: 0.7; margin-top: 0.3rem;">
+                            💡 More uses = more cost. One code, multiple uses.
+                        </div>
+                    {% else %}
+                        <!-- REGULAR ITEM: Quantity-based -->
+                        <div class="buy-controls">
+                            <label for="qty-{{ item.item_id }}">Quantity:</label>
+                            <input type="number" 
+                                   id="qty-{{ item.item_id }}" 
+                                   value="1" 
+                                   min="1" 
+                                   max="{{ item.current_stock if item.stock_limit else 99 }}"
+                                   onchange="updateTotal('{{ item.item_id }}', {{ item.price }})">
+                            <button class="buy-btn" 
+                                    onclick="buyItem('{{ item.item_id }}', '{{ item.name }}', {{ item.price }}, false)"
+                                    {% if item.current_stock == 0 and item.stock_limit %}disabled{% endif %}>
+                                Buy Now
+                            </button>
+                        </div>
+                        <div class="total-cost" id="total-{{ item.item_id }}">
+                            Total: {{ item.price }} 💰
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        {% if not items %}
+        <div class="empty-state">
+            <h2>📦 Shop is Empty</h2>
+            <p>No items available at the moment. Check back later!</p>
+        </div>
+        {% endif %}
+        
+                <div class="nav-links">
+            <a href="/">🏠 Home</a>
+            
+            {# Keep the user ID in the URL if they are on the shop #}
+            <a href="/shop{% if player %}?user={{ player.discord_id }}{% endif %}">🛒 Shop</a>
+            
+            {# Only show the Profile link if we actually know who they are #}
+            {% if player %}
+                <a href="/profile/{{ player.discord_id }}">👤 Profile</a>
+            {% else %}
+                <span style="opacity: 0.5; padding: 0.8rem 1.5rem; display: inline-block;">👤 View Profile via Bot</span>
+            {% endif %}
+        </div>
+    </div>
+    
+    <script>
+    function updateTotal(itemId, price) {
+        const qtyInput = document.getElementById('qty-' + itemId);
+        const totalDiv = document.getElementById('total-' + itemId);
+        if (!qtyInput || !totalDiv) return;
+        
+        const quantity = parseInt(qtyInput.value) || 1;
+        const total = price * quantity;
+        
+        // Detect if this is a pass
+        const isPass = ['tot_pass', 'daily_pass', 'all_pass'].includes(itemId);
+        if (isPass) {
+            totalDiv.textContent = 'Total: ' + total + ' 💰 (' + quantity + ' use' + (quantity > 1 ? 's' : '') + ')';
+        } else {
+            totalDiv.textContent = 'Total: ' + total + ' 💰';
+        }
+    }
+    
+    async function buyItem(itemId, itemName, price, isPass) {
+        const qtyInput = document.getElementById('qty-' + itemId);
+        const quantity = parseInt(qtyInput.value) || 1;
+        const totalCost = price * quantity;
+        
+        const playerId = document.body.getAttribute('data-player-id') || '';
+        
+        if (!playerId) {
+            alert('❌ Error: Player not found. Please log in or add ?user=YOUR_ID to the URL.');
+            return;
+        }
+        
+        const usageLabel = isPass ? 'use' + (quantity > 1 ? 's' : '') : 'item' + (quantity > 1 ? 's' : '');
+        const confirmMsg = isPass 
+            ? `🎫 Buy ${itemName}\n\nUses: ${quantity}\nTotal Cost: ${totalCost} 💰\n\nYou'll receive ONE code usable ${quantity} time${quantity > 1 ? 's' : ''}.\n\nContinue?`
+            : `🛒 Buy ${itemName} x${quantity}\n\nTotal Cost: ${totalCost} 💰\n\nContinue?`;
+        
+        if (!confirm(confirmMsg)) {
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/buy', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    item_id: itemId,
+                    quantity: quantity,
+                    discord_id: playerId,
+                    is_pass: isPass
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                let message = '✅ Purchase Successful!\n\n' + result.message;
+                if (result.codes) {
+                    message += '\n\nYour approval code' + (result.codes.length > 1 ? 's' : '') + ':\n' + result.codes.join('\n');
+                }
+                alert(message);
+                location.reload();
+            } else {
+                alert('❌ Purchase Failed\n\n' + result.message);
+            }
+        } catch (error) {
+            alert('❌ Error: ' + error.message);
+        }
+    }
+    
+    // Filter items by rarity
+    function filterItems(rarity) {
+        const cards = document.querySelectorAll('.item-card');
+        const buttons = document.querySelectorAll('.filter-btn');
+        
+        // Update active button
+        buttons.forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.textContent.toLowerCase().includes(rarity) || 
+                (rarity === 'all' && btn.textContent.includes('All'))) {
+                btn.classList.add('active');
+            }
+        });
+        
+        // Show/hide cards
+        cards.forEach(card => {
+            if (rarity === 'all' || card.dataset.rarity === rarity) {
+                card.style.display = 'block';
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                    card.style.transform = 'scale(1)';
+                }, 10);
+            } else {
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.8)';
+                setTimeout(() => {
+                    card.style.display = 'none';
+                }, 300);
+            }
+        });
+    }
+    
+    // Initialize totals on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        {% for item in items %}
+        updateTotal('{{ item.item_id }}', {{ item.price }});
+        {% endfor %}
+    });
+    
+    // Fallback function to manually set Discord ID
+    function applyDiscordId() {
+        const discordId = document.getElementById('manual-discord-id').value.trim();
+        if (discordId && /^\d+$/.test(discordId)) {
+            // Reload the page with the user parameter
+            window.location.href = '/shop?user=' + discordId;
+        } else {
+            alert('❌ Please enter a valid numeric Discord ID.');
+        }
+        return false;
+    }
+    </script>
+</body>
+</html>
