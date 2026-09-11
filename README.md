@@ -156,7 +156,6 @@ Whether you're commanding a round as the imposter or building your fortune throu
 /buy tot_pass usage:10 Buy TOT pass with 10 uses
 /use tot_pass code:ABC123 Use approved pass
 
-
 ### 👑 Admin Commands
 
 /startgame Start a new round
@@ -167,9 +166,7 @@ Whether you're commanding a round as the imposter or building your fortune throu
 /approve <code> Approve an item
 /reject <code> Reject an item
 
-
 ---
-
 ## 🌐 Web Dashboard
 
 Access your server's control panel at: `http://YOUR_SERVER_IP:PORT`
@@ -290,7 +287,7 @@ sudo nano /etc/systemd/system/station404.service
 sudo systemctl enable station404
 sudo systemctl start station404
 
-📦 Project Structure
+####📦 Project Structure
 
 station404/
 ├── bot/                    # Discord bot core
@@ -319,43 +316,46 @@ station404/
 ├── requirements.txt     # Python dependencies
 └── README.md           # This file
 
-🔧 Configuration
+####🔧 Configuration
 Game Settings (via /config)
 
-🛡️ Security
+####🛡️ Security
 Admin Authentication — Session-based login with secure cookies
 Rate Limiting — Prevents abuse of admin endpoints
 Audit Logging — All admin actions recorded in event log
 Input Validation — Sanitized user inputs prevent injection
 Environment Variables — Sensitive data stored in .env (gitignored)
-🧰 Tech Stack
+
+####🧰 Tech Stack
 Discord.py — Discord API integration
 AIOHTTP — Async web server
 SQLite3 — Lightweight database
 Jinja2 — Template engine
 UVLoop — High-performance event loop
 Python 3.11+ — Core language
-🤝 Contributing
+
+####🤝 Contributing
 Fork the repository
 Create a feature branch (git checkout -b feature/AmazingFeature)
 Commit your changes (git commit -m 'Add AmazingFeature')
 Push to the branch (git push origin feature/AmazingFeature)
 Open a Pull Request
-📝 License
+
+####📝 License
 This project is licensed under the MIT License — see the LICENSE file for details.
-🙏 Acknowledgments
+
+####🙏 Acknowledgments
 Discord.py community for excellent documentation
 Among Us for inspiration
 Pterodactyl/Wispbyte for free hosting options
-📞 Support
+
+####📞 Support
 Issues: GitHub Issues
 Discord: Join our community
 <div align="center">
 
 Made with ❤️ by Gesha
 ⭐ Star this repo if you find it useful!
-</div>
-
 
 ---
 
@@ -375,5 +375,3 @@ Made with ❤️ by Gesha
 - Replace `YOUR_USERNAME` with your actual GitHub username (appears 3 times)
 - Replace `Gesha` with your name if different
 - Replace the Discord invite link with your real one (or remove that line)
-
-The README will render with all the badges, tables, emojis, and formatting automatically! 🎯
